@@ -14,3 +14,7 @@ dist/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
+
+/src/generated/prisma
+
+/src/generated/prisma
