@@ -4,7 +4,7 @@ import { authenticationMiddleware } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validation.middleware";
 import { chatValidator } from "../validators/auth.validation";
 
-const chatRouter = Express.Router();
+const chatRouter = Express.Router()
 
 chatRouter.post("/chat", authenticationMiddleware, validate(chatValidator), chatHandler);
 
