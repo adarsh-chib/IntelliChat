@@ -16,8 +16,8 @@ export const userRegisterServices = async (
     },
   });
 
-  if (!findUser) {
-    throw new ApiError(404, "user not found");
+  if (findUser) {
+    throw new ApiError(404, "user already found");
   }
 
   const hashpassword = await bcrypt.hash(password, 10);
@@ -54,8 +54,8 @@ export const userLoginServices = async (email: string, password: string) => {
   }
 
   const payload = {
-    email: email,
-    password: password,
+    id: findUser.id,
+    email: findUser.email,
   };
 
   const tokenAccess = generateAccessToken(payload);
@@ -70,7 +70,10 @@ export const userLoginServices = async (email: string, password: string) => {
   };
 };
 
-export const userUpdateServices = async (id: string, data: { name?: string; email?: string }) => {
+export const userUpdateServices = async (
+  id: string,
+  data: { name?: string; email?: string },
+) => {
   const updatedUser = await prisma.user.update({
     where: { id },
     data,
@@ -95,4 +98,64 @@ export const getUserServices = async (id: string) => {
   }
   const { password, ...userWithoutPassword } = user;
   return userWithoutPassword;
+};
+export const forgotPasswordService = async (email: string) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found with this email");
+  }
+
+  // Generate a simple 6-digit reset token
+  const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+  const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      resetToken,
+      resetTokenExpiry,
+    },
+  });
+
+  // In a real app, you would send this token via email here
+  return {
+    resetToken,
+    message: "Reset token generated successfully (Check your email)",
+  };
+};
+
+export const resetPasswordService = async (
+  email: string,
+  token: string,
+  newPassword: string,
+) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      email,
+      resetToken: token,
+      resetTokenExpiry: {
+        gt: new Date(),
+      },
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired reset token");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
+
+  return { message: "Password reset successfully" };
 };

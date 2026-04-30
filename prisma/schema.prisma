@@ -9,10 +9,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String   @unique
-  password  String
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String    @unique
+  password         String
+  tokenBalance     Int       @default(100)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   chats     Chat[]
@@ -28,11 +32,16 @@ model Chat {
   updatedAt DateTime  @updatedAt
 }
 
+enum Role {
+  user
+  model
+}
+
 model Message {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   chatId    String   @db.ObjectId
   chat      Chat     @relation(fields: [chatId], references: [id])
-  role      String // "user" or "model"
+  role      Role
   content   String
   createdAt DateTime @default(now())
 }

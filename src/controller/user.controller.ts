@@ -6,7 +6,10 @@ import {
   userUpdateServices,
   userDeleteServices,
   getUserServices,
+  forgotPasswordService,
+  resetPasswordService,
 } from "../service/user.service";
+
 
 export const userRegister = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
@@ -58,4 +61,25 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
     next(err);
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  const { email } = req.body;
+  try {
+    const data = await forgotPasswordService(email);
+    res.status(200).json(new ApiResponse(200, "Reset token generated", data));
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, token, newPassword } = req.body;
+  try {
+    const data = await resetPasswordService(email, token, newPassword);
+    res.status(200).json(new ApiResponse(200, "Password reset successfully", data));
+  } catch (err) {
+    next(err);
+  }
+};
+
 
