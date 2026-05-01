@@ -1,31 +1,50 @@
 import "dotenv/config";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const apiKey = process.env.GEMINIKEY;
-
-if (!apiKey) {
-  throw new Error("GEMINIKEY is not defined in the environment.");
-}
-
-const genAI = new GoogleGenerativeAI(apiKey);
-
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+import { any } from "zod";
 
 /**
- * Generates a response from Gemini using conversation history for context.
- * @param history - Array of previous messages formatted for Gemini
- * @param message - The new message from the user
+ * Generates a streaming response from OpenRouter.
+ * @param history - Array of previous messages
+ * @param message - The new message
  */
-export const generateResponse = async (history: any[], message: string) => {
-  // 1. We "startChat" and give it the memory (history) from our database
-  const chat = model.startChat({
-    history: history,
+export const generateStreamingResponse = async (history: any[], message: string) => {
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  const MODEL = process.env.OPENROUTER_MODEL;
+
+  if (!OPENROUTER_API_KEY) {
+    throw new Error("OPENROUTER_API_KEY is not defined in the environment.");
+  }
+
+  if (!MODEL) {
+    throw new Error("OPENROUTER_MODEL is not defined in the environment.");
+  }
+  // OpenRouter uses OpenAI format: [{ role: "user", content: "..." }]
+  const messages = [
+    ...history.map(h => ({
+      role: h.role === "model" ? "assistant" : h.role,
+      content: h.parts[0].text
+    })),
+    { role: "user", content: message }
+  ];
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "http://localhost:3000", // Optional, for OpenRouter rankings
+      "X-Title": "IntelliChat AI", // Optional
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: messages,
+      stream: true,
+    }),
   });
 
-  // 2. We send the new message as part of this ongoing conversation
-  const result = await chat.sendMessage(message);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`OpenRouter Error: ${(errorData as any).error?.message || response.statusText}`);
+  }
 
-  // 3. Return the text reply
-  return result.response.text();
+  return response.body; // Returns a ReadableStream
 };
-

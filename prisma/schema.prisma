@@ -13,9 +13,10 @@ model User {
   name             String
   email            String    @unique
   password         String
-  tokenBalance     Int       @default(100)
+  tokenBalance     Int       @default(1000)
   resetToken       String?
   resetTokenExpiry DateTime?
+  lastTokenReset   DateTime? @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
