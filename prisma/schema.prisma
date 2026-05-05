@@ -29,6 +29,7 @@ model Chat {
   user      User      @relation(fields: [userId], references: [id])
   messages  Message[]
   title     String?
+  summary   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

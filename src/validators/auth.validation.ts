@@ -36,6 +36,7 @@ export const resetPasswordValidator = z.object({
 
 export const chatValidator = z.object({
   message: z.string().min(1, "Message cannot be empty"),
-  chatId: z.string().optional(),
+  chatId: z.string().nullable().optional(),
 });
+
 

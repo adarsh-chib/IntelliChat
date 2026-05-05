@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliChat | AI with Memory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="glass-container">
+        <!-- Auth View -->
+        <section id="auth-view" class="view">
+            <div class="auth-card">
+                <h1 id="auth-title">Welcome Back</h1>
+                <p id="auth-subtitle">Login to access your persistent AI memory</p>
+                <div class="input-group">
+                    <input type="text" id="name" placeholder="Full Name" class="hidden">
+                    <input type="email" id="email" placeholder="Email Address">
+                    <input type="password" id="password" placeholder="Password">
+                </div>
+                <button id="auth-btn" class="primary-btn">Enter Workspace</button>
+                <p class="toggle-auth">
+                    <span id="toggle-text">Don't have an account?</span>
+                    <a href="#" id="toggle-auth-link">Sign Up</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Main Chat View (Hidden by default) -->
+        <section id="chat-view" class="view hidden">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>IntelliChat</h2>
+                    <div class="sidebar-actions">
+                        <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+                        <button id="delete-all-btn" class="delete-all-btn" title="Delete all chats">🗑️ Clear All</button>
+                    </div>
+                </div>
+                <div id="chat-history" class="chat-history-list">
+                    <!-- History items will be injected here -->
+                    <div class="loader"></div>
+                </div>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <span id="user-display">User</span>
+                        <div class="token-info">
+                            <span class="token-icon">🪙</span>
+                            <span id="token-balance">0</span> tokens
+                        </div>
+                    </div>
+                    <button id="logout-btn">Logout</button>
+                </div>
+            </aside>
+
+            <main class="chat-area">
+                <header class="chat-header">
+                    <div class="active-chat-info">
+                        <h3 id="current-chat-title">New Conversation</h3>
+                        <span id="memory-status" class="status-badge hidden">Memory Active</span>
+                    </div>
+                </header>
+
+                <div id="messages-container" class="messages-container">
+                    <!-- Messages will be injected here -->
+                    <div class="welcome-message">
+                        <h1>How can I help you today?</h1>
+                        <p>Your history and memory are synced and ready.</p>
+                    </div>
+                </div>
+
+                <footer class="input-area">
+                    <div class="input-wrapper">
+                        <textarea id="message-input" placeholder="Type a message..." rows="1"></textarea>
+                        <button id="send-btn">
+                            <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                        </button>
+                    </div>
+                </footer>
+            </main>
+        </section>
+    </div>
+    <!-- Token Expiration Modal -->
+    <div id="token-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-icon">⚠️</div>
+            <h2>Tokens Exhausted</h2>
+            <p>You've reached your token limit for now. Your tokens will automatically reset every 24 hours.</p>
+            <div class="reset-timer">Next reset: <span id="reset-time">Midnight</span></div>
+            <button id="close-modal-btn" class="primary-btn">Got it</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

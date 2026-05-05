@@ -3,21 +3,24 @@ import { ApiError } from "../utils/api.error";
 import bcrypt from "bcrypt";
 import { generateAccessToken } from "../utils/generateaccesstoken";
 import { generateRefreshToken } from "../utils/generaterefreshtoken";
-import { accessToken, refreshTOken } from "../configs/jwt";
+import { accessToken, refreshToken } from "../configs/jwt";
 
 export const userRegisterServices = async (
   name: string,
   email: string,
   password: string,
 ) => {
-  const findUser = await prisma.user.findUnique({
+  const findUser = await prisma.user.findFirst({
     where: {
-      email,
+      OR: [
+        { email },
+        { AND: [{ name }, { email }] } // Or just check if name and email combination exists
+      ]
     },
   });
 
   if (findUser) {
-    throw new ApiError(404, "user already found");
+    throw new ApiError(409, "User with this email already exists");
   }
 
   const hashpassword = await bcrypt.hash(password, 10);

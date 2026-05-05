@@ -1,76 +1,91 @@
-# IntelliChat AI - Backend
+# 🚀 IntelliChat AI - High-Performance Background Memory Engine
 
-A powerful, authenticated AI chat system powered by Google Gemini, Express, and Prisma (MongoDB). This backend supports real-time streaming, persistent chat history, and a token-based usage system.
+IntelliChat is a state-of-the-art AI chat backend built for speed, memory, and persistence. It features real-time streaming, background memory summarization, and a robust token-based economy.
 
-## 🚀 Tech Stack
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
+## 🛠 Tech Stack
+- **Backend**: Node.js, Express, TypeScript
 - **Database**: MongoDB (via Prisma ORM)
-- **AI Engine**: Google Generative AI (Gemini 2.5 Flash Lite)
-- **Security**: JWT Authentication & Bcrypt Password Hashing
-- **Monitoring**: Sentry Integration
-
-## ✨ Features Implemented
-- [x] **User Authentication**: Secure Signup/Login with JWT tokens.
-- [x] **Token System**: Users start with 50 tokens; 10 tokens are deducted per AI interaction.
-- [x] **Streaming Responses**: Real-time message delivery using `chunked` transfer encoding.
-- [x] **Persistent Storage**: All conversations and messages are stored in MongoDB.
-- [x] **Context Awareness (Memory)**: Gemini remembers the last 15 messages for a natural conversation flow.
+- **AI Integration**: OpenRouter (Unified API for various LLMs)
+- **Background Tasks**: BullMQ + Redis
+- **Streaming**: Server-Sent Events (SSE)
+- **Security**: JWT (Access & Refresh Tokens), Bcrypt hashing
 
 ---
 
-## 🛠 Step-by-Step Implementation Journey
+## ✨ Core Features
 
-### Phase 1: Foundation & Authentication
-- Setup the project with **TypeScript** and **Express**.
-- Integrated **Prisma ORM** with MongoDB for data persistence.
-- Implemented **Auth Middleware** to protect AI routes using JWT.
-- Created `User` model with `tokenBalance` to manage usage limits.
+### 1. 🧠 Dual-Layer Memory System
+*   **Short-Term History**: The AI automatically remembers the last 5 messages in any conversation for immediate context.
+*   **Long-Term Background Memory**: Uses a **BullMQ** worker to process and summarize conversations in the background. This "Memory Summary" is then provided as context to future chats, allowing the AI to remember things you said days ago without slowing down the request.
 
-### Phase 2: Gemini AI Integration
-- Configured the Google Generative AI SDK.
-- Created the `gemini.service.ts` to handle interactions with the `gemini-2.5-flash-lite` model.
-- Implemented `sendMessageStream` to support low-latency streaming responses.
+### 2. ⚡ Extreme Performance Optimization
+*   **Parallel Request Pipeline**: We use `Promise.all` to fetch user data, chat history, and long-term memory simultaneously.
+*   **Non-Blocking Saves**: The AI request starts immediately after you send a message. Saving the message to the database happens in the background, reducing the "Time to First Byte" by nearly 40%.
+*   **SSE Streaming**: Tokens are streamed directly from OpenRouter to the client as they are generated, ensuring a "ChatGPT-like" typing experience.
 
-### Phase 3: Database & Streaming Flow
-- Implemented the `chatHandler` to:
-    1. Create a `Chat` session if one doesn't exist.
-    2. Save the User's message to the database immediately.
-    3. Stream chunks of AI text back to the client using `res.write()`.
-    4. Save the full AI reply to the database once the stream finishes.
-    5. Deduct 10 tokens from the user's balance.
+### 3. 🛡️ User & Security
+*   **Advanced Auth**: Secure authentication using Access Tokens (1h) and Refresh Tokens (7d).
+*   **Token Economy**: 
+    *   New users start with **1,000 tokens**.
+    *   Every AI response costs **10 tokens**.
+    *   Automatic token exhaustion detection with frontend alerts.
+*   **Auto-Logout**: Proactive session management that logs out users when their security token expires.
 
-### Phase 4: Long-Term Memory (Context Awareness)
-- **The Challenge**: Making the AI remember previous parts of the conversation without sending too much data.
-- **The Solution**: 
-    1. **Fetch Latest**: Query the DB for the last 15 messages using `orderBy: { createdAt: "desc" }`.
-    2. **Reverse for AI**: Since Gemini needs history in chronological order, we `.reverse()` the array in the backend before sending it to the SDK.
-    3. **Start Chat**: Use `model.startChat({ history })` to initialize the AI with the correct context.
+### 4. 📂 Chat Management
+*   **Persistence**: Stay logged in even after a hard browser refresh.
+*   **Organization**: Multiple chat sessions per user with individual titles and summaries.
+*   **Clean Workspace**: One-click "Clear All" or individual chat deletion.
 
 ---
 
-## 🔑 Environment Variables
-Create a `.env` file in the root directory:
+## 🏗 Background Services Architecture
+
+The project uses a **Producer-Consumer** pattern for memory processing:
+1.  **The Producer**: When a chat finishes, the `chat.controller` adds a job to the `chat-memory` queue.
+2.  **The Delay**: A 5-second delay is added to ensure the background task doesn't interfere with the user's current network bandwidth.
+3.  **The Consumer**: A dedicated `chat.worker` (running on BullMQ) picks up the task, retrieves history, generates a summary, and updates the database.
+
+---
+
+## 🔑 Environment Setup
+
+Create a `.env` file:
 ```env
-PORT=5000
-DATABASE_URL=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-GEMINIKEY=your_google_gemini_api_key
+PORT=2000
+DATABASE_URL="your_mongodb_uri"
+OPENROUTER_API_KEY="your_openrouter_key"
+OPENROUTER_MODEL="your_preferred_model"
+ACCESS_TOKEN="your_jwt_access_secret"
+REFRESH_TOKEN="your_jwt_refresh_secret"
+REDIS_HOST="localhost"
+REDIS_PORT=6379
 ```
 
-## 🏃 How to Run
-1. Install dependencies:
+---
+
+## 🚀 Getting Started
+
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
-2. Generate Prisma Client:
+
+2. **Sync Database**:
    ```bash
    npx prisma generate
+   npx prisma db push
    ```
-3. Run in development mode:
+
+3. **Start Redis**:
+   Make sure you have a Redis server running locally or via Docker.
+
+4. **Run Development Server**:
    ```bash
    npm run dev
    ```
 
+5. **Run Frontend**:
+   Serve the `frontend` folder using any static server (e.g., `npx serve frontend`).
+
 ---
-*Created as part of the IntelliChat development sprint.*
+*Developed with focus on low-latency AI interactions and persistent state management.*

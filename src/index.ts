@@ -3,9 +3,19 @@ import Express from "express";
 import chatRouter from "./route/chat.route";
 import { requestLogger } from "./middleware/global.logger";
 import userRouter from "./route/user.route";
+import "./workers/chat.worker";
+import cors from "cors";
 
 const app = Express();
+
+// Enable CORS
+app.use(cors({
+  origin: "*", // In production, replace with your frontend URL
+  exposedHeaders: ["x-chat-id"] // Allow frontend to read the Chat ID
+}));
+
 app.use(Express.json());
+
 app.use(requestLogger);
 
 app.use("/", chatRouter);
